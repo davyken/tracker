@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHANTOM TRACK — Anti-Theft Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:wght@200;400;700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   GLOBAL
+═══════════════════════════════════════════════ */
+:root {
+  --bg:#030508;--panel:#080d14;--panel2:#0c1420;--border:#0f3a5a;
+  --accent:#00d4ff;--accent2:#ff3c5a;--accent3:#00ff88;--accent4:#ffaa00;
+  --text:#c8dde8;--text-dim:#4a6a7a;
+  --glow:0 0 20px rgba(0,212,255,0.3);
+  --glow-red:0 0 20px rgba(255,60,90,0.3);
+  --glow-green:0 0 20px rgba(0,255,136,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;cursor:crosshair;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999;}
+
+/* ── PAGE SWITCHING ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ═══════════════════════════════════════════════
+   TRACKER PAGE STYLES
+═══════════════════════════════════════════════ */
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:14px;}
+.logo-icon svg{width:38px;height:38px;}
+.logo-text{font-family:'Exo 2',sans-serif;font-weight:900;font-size:1.4rem;letter-spacing:0.15em;color:var(--accent);text-shadow:var(--glow);}
+.logo-sub{font-size:0.6rem;letter-spacing:0.3em;color:var(--text-dim);font-family:'Share Tech Mono',monospace;margin-top:-2px;}
+.header-status{display:flex;gap:18px;align-items:center;}
+.status-pill{display:flex;align-items:center;gap:7px;font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);box-shadow:0 0 10px var(--accent3);animation:pulse-dot 1.5s ease-in-out infinite;}
+.pulse-dot.red{background:var(--accent2);box-shadow:0 0 10px var(--accent2);}
+.pulse-dot.yellow{background:var(--accent4);box-shadow:0 0 10px var(--accent4);}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.7);}}
+.header-time{font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:var(--accent);letter-spacing:0.1em;}
+.nav-btn{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;padding:6px 14px;background:transparent;color:var(--accent4);border:1px solid var(--accent4);border-radius:4px;cursor:pointer;transition:all 0.2s;}
+.nav-btn:hover{background:rgba(255,170,0,0.15);box-shadow:0 0 15px rgba(255,170,0,0.3);transform:translateY(-1px);}
+
+.main-grid{display:grid;grid-template-columns:300px 1fr 300px;gap:1px;background:var(--border);min-height:calc(100vh - 62px);}
+.panel{background:var(--panel);padding:20px;}
+.panel-title{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.panel-title::before{content:'//';color:var(--accent);font-size:0.7rem;}
+.left-panel{grid-column:1;}
+.right-panel{grid-column:3;overflow-y:auto;max-height:calc(100vh - 62px);}
+
+.device-card{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden;}
+.device-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent2);box-shadow:0 0 12px var(--accent2);}
+.device-name{font-family:'Exo 2',sans-serif;font-weight:700;font-size:1rem;margin-bottom:6px;letter-spacing:0.05em;}
+.device-meta{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--text-dim);line-height:1.8;}
+.device-meta span{color:var(--accent);}
+.device-status-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,60,90,0.1);border:1px solid rgba(255,60,90,0.3);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.15em;padding:3px 9px;border-radius:3px;margin-top:8px;text-transform:uppercase;}
+
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.stat-box{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:12px;text-align:center;}
+.stat-val{font-family:'Exo 2',sans-serif;font-weight:900;font-size:1.4rem;color:var(--accent);text-shadow:var(--glow);line-height:1;}
+.stat-val.red{color:var(--accent2);text-shadow:var(--glow-red);}
+.stat-val.green{color:var(--accent3);text-shadow:var(--glow-green);}
+.stat-val.yellow{color:var(--accent4);}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);letter-spacing:0.1em;margin-top:4px;}
+
+.timeline{margin-bottom:14px;}
+.timeline-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid rgba(15,58,90,0.4);font-family:'Share Tech Mono',monospace;font-size:0.65rem;}
+.t-time{color:var(--text-dim);min-width:46px;}
+.t-event{color:var(--text);flex:1;line-height:1.4;}
+.t-event .highlight{color:var(--accent2);}
+.t-event .ok{color:var(--accent3);}
+.t-event .warn{color:var(--accent4);}
+
+.signal-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;}
+.signal-item{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:10px;}
+.signal-label{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:4px;}
+.signal-val{font-family:'Exo 2',sans-serif;font-weight:700;font-size:0.9rem;color:var(--text);}
+.signal-bar{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:6px;overflow:hidden;}
+.signal-fill{height:100%;background:var(--accent3);border-radius:2px;transition:width 1s ease;box-shadow:0 0 8px var(--accent3);}
+.signal-fill.orange{background:var(--accent4);box-shadow:0 0 8px var(--accent4);}
+.signal-fill.red{background:var(--accent2);box-shadow:0 0 8px var(--accent2);}
+
+/* Center map */
+.center-panel{grid-column:2;display:flex;flex-direction:column;background:var(--panel);}
+.map-container{position:relative;flex:1;min-height:500px;background:#030b10;overflow:hidden;}
+#mapCanvas{width:100%;height:100%;display:block;}
+.map-overlay-tl{position:absolute;top:14px;left:14px;background:rgba(8,13,20,0.85);border:1px solid var(--border);border-radius:5px;padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;backdrop-filter:blur(4px);z-index:10;}
+.map-overlay-tr{position:absolute;top:14px;right:14px;background:rgba(8,13,20,0.85);border:1px solid var(--border);border-radius:5px;padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;backdrop-filter:blur(4px);z-index:10;text-align:right;}
+.map-overlay-br{position:absolute;bottom:14px;right:14px;background:rgba(8,13,20,0.85);border:1px solid var(--border);border-radius:5px;padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;backdrop-filter:blur(4px);z-index:10;}
+.coord-row{color:var(--text-dim);line-height:1.8;}
+.coord-row span{color:var(--accent);}
+.legend-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.legend-dot{width:8px;height:8px;border-radius:50%;}
+
+.alert-bar{background:rgba(255,60,90,0.08);border-top:1px solid rgba(255,60,90,0.3);border-bottom:1px solid rgba(255,60,90,0.3);padding:10px 20px;display:none;align-items:center;gap:14px;font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent2);letter-spacing:0.08em;}
+.alert-bar.visible{display:flex;}
+.alert-bar-icon{font-size:1rem;animation:blink 0.8s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+.itinerary-panel{padding:16px 20px;background:var(--panel2);border-top:1px solid var(--border);}
+.itinerary-title{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.itinerary-steps{display:flex;overflow-x:auto;padding-bottom:6px;}
+.itinerary-step{display:flex;align-items:center;min-width:160px;}
+.step-node{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;}
+.step-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:0.6rem;font-weight:bold;}
+.step-dot.done{border-color:var(--accent3);background:rgba(0,255,136,0.1);color:var(--accent3);}
+.step-dot.current{border-color:var(--accent2);background:rgba(255,60,90,0.1);color:var(--accent2);animation:pulse-border 1s ease-in-out infinite;}
+.step-dot.pending{border-color:var(--text-dim);color:var(--text-dim);}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 0 0 rgba(255,60,90,0.4);}50%{box-shadow:0 0 0 8px rgba(255,60,90,0);}}
+.step-info{text-align:center;margin-top:4px;}
+.step-name{font-family:'Rajdhani',sans-serif;font-size:0.72rem;font-weight:600;color:var(--text);white-space:nowrap;}
+.step-time{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);}
+.step-connector{flex:1;height:2px;background:var(--border);margin:0 4px;margin-bottom:22px;position:relative;overflow:hidden;}
+.step-connector.active{background:linear-gradient(90deg,var(--accent3),var(--accent2));box-shadow:0 0 6px rgba(0,255,136,0.5);}
+.step-connector.active::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);animation:scan-line 1.5s linear infinite;}
+@keyframes scan-line{to{left:200%;}}
+
+/* Right panel components */
+.bait-section{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:14px;}
+.section-label{font-family:'Share Tech Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;}
+.input-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.input-field{background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.72rem;padding:8px 12px;border-radius:4px;outline:none;transition:border-color 0.2s;letter-spacing:0.05em;}
+.input-field:focus{border-color:var(--accent);box-shadow:var(--glow);}
+.input-field::placeholder{color:var(--text-dim);}
+
+.btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.2em;text-transform:uppercase;padding:9px 16px;border:none;border-radius:4px;cursor:pointer;transition:all 0.2s;width:100%;margin-top:6px;}
+.btn:first-of-type{margin-top:0;}
+.btn-primary{background:linear-gradient(135deg,#0044aa,#0088cc);color:#fff;border:1px solid var(--accent);box-shadow:var(--glow);}
+.btn-primary:hover{background:linear-gradient(135deg,#0066cc,#00aaee);transform:translateY(-1px);}
+.btn-danger{background:linear-gradient(135deg,#660020,#cc0033);color:#fff;border:1px solid var(--accent2);box-shadow:var(--glow-red);}
+.btn-danger:hover{background:linear-gradient(135deg,#880030,#ee0044);transform:translateY(-1px);}
+.btn-green{background:linear-gradient(135deg,#004422,#008844);color:#fff;border:1px solid var(--accent3);box-shadow:var(--glow-green);}
+.btn-orange{background:linear-gradient(135deg,#663300,#cc6600);color:#fff;border:1px solid var(--accent4);box-shadow:0 0 15px rgba(255,170,0,0.2);}
+
+/* Upload zone */
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:16px 12px;text-align:center;cursor:pointer;transition:all 0.25s;background:rgba(0,0,0,0.25);margin-bottom:10px;position:relative;overflow:hidden;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:rgba(0,212,255,0.06);box-shadow:var(--glow);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone-icon{font-size:1.8rem;margin-bottom:6px;}
+.upload-zone-text{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:0.08em;line-height:1.6;}
+.upload-zone-text span{color:var(--accent);}
+
+.img-preview-wrap{display:none;position:relative;border-radius:8px;overflow:hidden;margin-bottom:10px;border:1px solid var(--accent3);}
+.img-preview-wrap.visible{display:block;}
+.img-preview-wrap img{width:100%;display:block;max-height:140px;object-fit:cover;}
+.img-preview-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 60%);display:flex;flex-direction:column;justify-content:flex-end;padding:10px 12px;}
+.img-preview-name{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:#fff;letter-spacing:0.08em;}
+.img-preview-size{color:var(--accent3);font-size:0.58rem;font-family:'Share Tech Mono',monospace;}
+.img-clear-btn{position:absolute;top:8px;right:8px;background:rgba(255,60,90,0.85);border:none;color:#fff;width:22px;height:22px;border-radius:50%;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.img-mode-badge{position:absolute;top:8px;left:8px;background:rgba(0,255,136,0.9);color:#000;font-family:'Share Tech Mono',monospace;font-size:0.55rem;padding:2px 7px;border-radius:3px;letter-spacing:0.1em;font-weight:bold;}
+
+.bait-link-box{background:rgba(0,0,0,0.5);border:1px dashed rgba(255,170,0,0.4);border-radius:5px;padding:10px 12px;margin-top:10px;display:none;}
+.bait-link-box.visible{display:block;}
+.bait-link-title{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--accent4);letter-spacing:0.15em;margin-bottom:6px;}
+.bait-link-url{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--accent);word-break:break-all;line-height:1.4;margin-bottom:8px;}
+
+.phone-row{display:flex;gap:7px;margin-bottom:8px;align-items:center;}
+.phone-prefix{background:var(--panel2);border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:0.7rem;padding:8px 10px;border-radius:4px;white-space:nowrap;}
+
+.share-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.share-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 6px;border:none;border-radius:6px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.76rem;letter-spacing:0.06em;cursor:pointer;transition:all 0.2s;}
+.share-btn-wa{background:linear-gradient(135deg,#075E54,#128C7E);color:#fff;box-shadow:0 3px 12px rgba(18,140,126,0.35);}
+.share-btn-wa:hover{background:linear-gradient(135deg,#128C7E,#25D366);transform:translateY(-1px);}
+.share-btn-sms{background:linear-gradient(135deg,#1a3a6a,#1e6fc9);color:#fff;box-shadow:0 3px 12px rgba(30,111,201,0.3);}
+.share-btn-sms:hover{background:linear-gradient(135deg,#1e6fc9,#2e90ff);transform:translateY(-1px);}
+.share-btn-copy{background:var(--panel2);color:var(--accent);border:1px solid var(--border);grid-column:span 2;}
+.share-btn-copy:hover{border-color:var(--accent);box-shadow:var(--glow);}
+
+/* Captured data */
+.captured-data{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:16px;}
+.captured-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(15,58,90,0.3);font-family:'Share Tech Mono',monospace;font-size:0.68rem;}
+.captured-row:last-child{border-bottom:none;}
+.captured-key{color:var(--text-dim);}
+.captured-val{color:var(--accent);}
+.captured-val.red{color:var(--accent2);}
+.captured-val.green{color:var(--accent3);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:9000;backdrop-filter:blur(4px);}
+.modal-overlay.visible{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--accent2);border-radius:10px;padding:32px;max-width:520px;width:90%;box-shadow:0 0 60px rgba(255,60,90,0.2);animation:modal-in 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes modal-in{from{transform:scale(0.7) translateY(40px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
+.modal-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.modal-icon{width:52px;height:52px;background:rgba(255,60,90,0.1);border:2px solid var(--accent2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;animation:spin-pulse 2s ease-in-out infinite;}
+@keyframes spin-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,60,90,0.4);}50%{box-shadow:0 0 0 14px rgba(255,60,90,0);}}
+.modal-title{font-family:'Exo 2',sans-serif;font-weight:900;font-size:1.4rem;color:var(--accent2);letter-spacing:0.08em;line-height:1.1;}
+.modal-subtitle{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:0.15em;margin-top:2px;}
+.modal-actions{display:flex;gap:10px;}
+.progress-bar-wrap{background:rgba(255,255,255,0.05);border-radius:3px;height:4px;margin-top:10px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent4));border-radius:3px;width:0%;transition:width 0.3s ease;box-shadow:0 0 10px rgba(255,60,90,0.5);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--panel);border:1px solid var(--accent3);box-shadow:var(--glow-green);border-radius:6px;padding:12px 20px;font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--accent3);letter-spacing:0.1em;z-index:9997;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;}
+.toast.visible{transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--panel);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ═══════════════════════════════════════════════
+   BAIT PAGE STYLES  (page-bait)
+═══════════════════════════════════════════════ */
+#page-bait{background:#f0f0f0;min-height:100vh;cursor:default;}
+.bp-outer{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+.bp-statusbar{background:#1a1a1a;height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:11px;color:#fff;font-weight:600;}
+.bp-browser{background:#2c2c2e;padding:7px 10px;display:flex;align-items:center;gap:8px;}
+.bp-dots{display:flex;gap:5px;}
+.bp-dot{width:10px;height:10px;border-radius:50%;}
+.bp-urlbar{flex:1;background:#3a3a3c;border-radius:7px;padding:5px 10px;font-size:11px;color:#ccc;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bp-urlbar .sec{color:#00cc6a;margin-right:3px;}
+.bp-back{position:absolute;top:60px;left:calc(50% - 215px + 8px);background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.72rem;padding:4px 12px;border-radius:4px;cursor:pointer;z-index:20;letter-spacing:0.1em;}
+.bp-appbar{background:#FF6600;padding:13px 16px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(255,102,0,0.3);}
+.bp-brand{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.05rem;color:#fff;}
+.bp-brand-sub{font-size:0.6rem;color:rgba(255,255,255,0.7);letter-spacing:0.1em;}
+.bp-content{flex:1;background:#fff;}
+
+/* IMAGE mode */
+.bp-imgwrap{background:#000;display:flex;flex-direction:column;align-items:center;min-height:340px;position:relative;}
+.bp-imgwrap img{width:100%;max-height:55vh;object-fit:contain;display:block;}
+.bp-imgcaption{color:#ddd;font-size:0.82rem;text-align:center;padding:10px 16px;line-height:1.5;}
+
+/* RECEIPT mode */
+.bp-receipt{padding:16px;}
+.bp-success-band{background:linear-gradient(135deg,#FF6600,#FF8C00);border-radius:12px;padding:20px;text-align:center;margin-bottom:14px;color:#fff;position:relative;overflow:hidden;}
+.bp-success-band::before{content:'';position:absolute;top:-40px;right:-40px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.08);}
+.bp-s-icon{font-size:2rem;margin-bottom:6px;}
+.bp-s-label{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;opacity:0.85;margin-bottom:4px;}
+.bp-s-amount{font-size:2.4rem;font-weight:900;font-family:'Nunito',sans-serif;line-height:1;}
+.bp-s-from{font-size:0.78rem;opacity:0.8;margin-top:4px;}
+.bp-card{border:1px solid #eee;border-radius:10px;overflow:hidden;margin-bottom:14px;}
+.bp-row{display:flex;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #f0f0f0;font-size:0.8rem;}
+.bp-row:last-child{border-bottom:none;}
+.bp-row span:first-child{color:#999;}
+.bp-row span:last-child{font-weight:600;}
+.bp-row.total{background:#fff8f3;}
+.bp-row.total span:first-child{font-weight:700;color:#e55a00;}
+.bp-row .big{font-size:1.1rem;color:#FF6600;font-weight:800;font-family:'Nunito',sans-serif;}
+.bp-row .green2{color:#00a651;}
+.bp-row .mono{font-family:monospace;font-size:0.74rem;color:#0066cc;}
+
+/* Confirm button */
+.bp-confirm-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;background:linear-gradient(135deg,#FF6600,#E55A00);color:#fff;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;box-shadow:0 5px 18px rgba(255,102,0,.32);position:relative;overflow:hidden;margin-top:4px;margin-bottom:8px;}
+.bp-confirm-btn::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:shine 2.2s ease-in-out infinite;}
+@keyframes shine{to{left:200%;}}
+.bp-hint{text-align:center;font-size:0.65rem;color:#bbb;padding-bottom:20px;}
+
+/* Permission sheet */
+.bp-perm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:flex-end;z-index:500;}
+.bp-perm-overlay.show{display:flex;}
+.bp-perm-sheet{width:100%;max-width:430px;margin:0 auto;background:#fff;border-radius:20px 20px 0 0;padding:18px 18px 34px;animation:su .3s ease;}
+@keyframes su{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.bp-perm-handle{width:38px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px;}
+.bp-perm-icon{width:52px;height:52px;background:#fff3ec;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 12px;}
+.bp-perm-title{text-align:center;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;margin-bottom:8px;}
+.bp-perm-desc{text-align:center;font-size:0.76rem;color:#888;line-height:1.6;margin-bottom:18px;}
+.bp-perm-btns{display:flex;gap:10px;}
+.bp-pb{flex:1;padding:13px;border:none;border-radius:11px;font-family:'Nunito',sans-serif;font-size:0.86rem;font-weight:700;cursor:pointer;}
+.bp-pb-allow{background:#FF6600;color:#fff;box-shadow:0 4px 14px rgba(255,102,0,.28);}
+.bp-pb-deny{background:#f0f0f0;color:#555;}
+
+/* Loading */
+.bp-loading{position:fixed;inset:0;background:rgba(255,255,255,.96);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:600;}
+.bp-loading.show{display:flex;}
+.bp-spinner{width:54px;height:54px;border:4px solid #eee;border-top-color:#FF6600;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:18px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.bp-loading h3{font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;margin-bottom:6px;}
+.bp-loading p{font-size:.75rem;color:#999;text-align:center;max-width:220px;line-height:1.5;}
+.bp-lsteps{margin-top:18px;display:flex;flex-direction:column;gap:7px;min-width:210px;}
+.bp-ls{display:flex;align-items:center;gap:9px;font-size:.75rem;color:#999;padding:7px 12px;border-radius:7px;background:#f5f5f5;transition:all .3s;}
+.bp-ls.a{background:#fff3ec;color:#e55a00;font-weight:600;}
+.bp-ls.d{background:#e8f8ef;color:#00a651;font-weight:600;}
+
+/* Done */
+.bp-done{position:fixed;inset:0;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:700;padding:24px;text-align:center;}
+.bp-done.show{display:flex;}
+.bp-bigcheck{width:90px;height:90px;background:linear-gradient(135deg,#00a651,#00cc66);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.8rem;margin-bottom:20px;box-shadow:0 6px 26px rgba(0,166,81,.28);animation:pop .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+.bp-done h2{font-family:'Nunito',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:8px;}
+.bp-done p{font-size:.8rem;color:#888;line-height:1.6;max-width:260px;}
+.bp-done-back{margin-top:24px;padding:12px 28px;background:#FF6600;color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.88rem;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 1: TRACKER DASHBOARD
+═══════════════════════════════════════════════ -->
+<div id="page-tracker" class="page active">
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="19" r="17" stroke="#00d4ff" stroke-width="1.5" opacity="0.4"/>
+        <circle cx="19" cy="19" r="11" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/>
+        <circle cx="19" cy="19" r="5" fill="#00d4ff" opacity="0.9"/>
+        <line x1="19" y1="2" x2="19" y2="8" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="19" y1="30" x2="19" y2="36" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="2" y1="19" x2="8" y2="19" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="30" y1="19" x2="36" y2="19" stroke="#00d4ff" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">PHANTOM TRACK</div>
+      <div class="logo-sub">ANTI-THEFT INTELLIGENCE PLATFORM — v3.0</div>
+    </div>
+  </div>
+  <div class="header-status">
+    <div class="status-pill"><div class="pulse-dot"></div>SYSTEM ONLINE</div>
+    <div class="status-pill"><div class="pulse-dot red"></div>1 STOLEN DEVICE</div>
+    <div class="status-pill"><div class="pulse-dot yellow"></div>TRACKING ACTIVE</div>
+    <div class="header-time" id="liveTime">--:--:--</div>
+    <button class="nav-btn" onclick="showPage('bait')">📱 BAIT PAGE</button>
+  </div>
+</header>
+
+<div class="alert-bar" id="alertBar">
+  <span class="alert-bar-icon">⚠</span>
+  <span id="alertText">BAIT LINK CLICKED — THIEF LOCATION ACQUIRED</span>
+</div>
+
+<div class="main-grid">
+
+  <!-- LEFT -->
+  <div class="panel left-panel">
+    <div class="panel-title">Device Registry</div>
+    <div class="device-card">
+      <div class="device-name">📱 iPhone 15 Pro — MINE</div>
+      <div class="device-meta">
+        IMEI: <span>356938035643809</span><br>
+        Owner: <span>Jean-Paul K.</span><br>
+        Last seen: <span>14:32 — Yaoundé</span><br>
+        Network: <span>MTN CM · 4G</span>
+      </div>
+      <div class="device-status-badge">⚡ STOLEN — TRACKING</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val red" id="statUpdates">0</div><div class="stat-label">PINGS RECV</div></div>
+      <div class="stat-box"><div class="stat-val green" id="statAccuracy">±42m</div><div class="stat-label">ACCURACY</div></div>
+      <div class="stat-box"><div class="stat-val" id="statDistance">1.2km</div><div class="stat-label">FROM HOME</div></div>
+      <div class="stat-box"><div class="stat-val yellow" id="statSpeed">--</div><div class="stat-label">SPEED</div></div>
+    </div>
+    <div class="panel-title" style="margin-top:4px;">Event Timeline</div>
+    <div class="timeline" id="timeline">
+      <div class="timeline-item"><span class="t-time">14:32</span><span class="t-event"><span class="highlight">STOLEN</span> — Yaoundé Centre Ville</span></div>
+      <div class="timeline-item"><span class="t-time">14:33</span><span class="t-event"><span class="warn">TRACKING</span> initiated by owner</span></div>
+      <div class="timeline-item"><span class="t-time">14:35</span><span class="t-event">Device moving — <span class="warn">SW direction</span></span></div>
+      <div class="timeline-item"><span class="t-time">14:37</span><span class="t-event"><span class="ok">BAIT</span> link generated</span></div>
+    </div>
+    <div class="panel-title" style="margin-top:4px;">Signal Intelligence</div>
+    <div class="signal-grid">
+      <div class="signal-item"><div class="signal-label">GPS SIGNAL</div><div class="signal-val">STRONG</div><div class="signal-bar"><div class="signal-fill" style="width:82%"></div></div></div>
+      <div class="signal-item"><div class="signal-label">4G SIGNAL</div><div class="signal-val">GOOD</div><div class="signal-bar"><div class="signal-fill" style="width:70%"></div></div></div>
+      <div class="signal-item"><div class="signal-label">BATTERY</div><div class="signal-val" id="battLevel">67%</div><div class="signal-bar"><div class="signal-fill orange" style="width:67%" id="battBar"></div></div></div>
+      <div class="signal-item"><div class="signal-label">CONFIDENCE</div><div class="signal-val">HIGH</div><div class="signal-bar"><div class="signal-fill" style="width:91%"></div></div></div>
+    </div>
+  </div>
+
+  <!-- CENTER MAP -->
+  <div class="center-panel">
+    <div class="map-container" id="mapContainer">
+      <canvas id="mapCanvas"></canvas>
+      <div class="map-overlay-tl">
+        <div class="coord-row">LAT: <span id="dispLat">3.8667</span></div>
+        <div class="coord-row">LNG: <span id="dispLng">11.5167</span></div>
+        <div class="coord-row">ALT: <span>743m</span></div>
+        <div class="coord-row" style="margin-top:4px;color:var(--accent2);" id="dispAddr">Yaoundé Centre</div>
+      </div>
+      <div class="map-overlay-tr">
+        <div class="coord-row" style="color:var(--accent2);">🎯 TARGET LOCKED</div>
+        <div class="coord-row">ZOOM: <span>14x</span></div>
+        <div class="coord-row">MODE: <span>LIVE TRACK</span></div>
+      </div>
+      <div class="map-overlay-br">
+        <div class="legend-row"><div class="legend-dot" style="background:#00d4ff;box-shadow:0 0 8px #00d4ff;"></div><span>Home Location</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:#ff3c5a;box-shadow:0 0 8px #ff3c5a;"></div><span>Thief (live)</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:#ffaa00;box-shadow:0 0 8px #ffaa00;"></div><span>Route traced</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:#00ff88;box-shadow:0 0 8px #00ff88;"></div><span>Bait click site</span></div>
+      </div>
+    </div>
+    <div class="itinerary-panel">
+      <div class="itinerary-title">
+        <span>// MOVEMENT ITINERARY</span>
+        <span style="color:var(--accent);font-size:0.6rem;" id="itinDist">Total: 0.0 km</span>
+      </div>
+      <div class="itinerary-steps">
+        <div class="itinerary-step"><div class="step-node"><div class="step-dot done">✓</div><div class="step-info"><div class="step-name">THEFT SITE</div><div class="step-time">14:32</div></div></div><div class="step-connector active"></div></div>
+        <div class="itinerary-step"><div class="step-node"><div class="step-dot done">✓</div><div class="step-info"><div class="step-name">Av. Kennedy</div><div class="step-time">14:35</div></div></div><div class="step-connector active"></div></div>
+        <div class="itinerary-step"><div class="step-node"><div class="step-dot current">!</div><div class="step-info"><div class="step-name" id="currentStep">TRACKING...</div><div class="step-time" id="currentStepTime">NOW</div></div></div><div class="step-connector"></div></div>
+        <div class="itinerary-step"><div class="step-node"><div class="step-dot pending" id="baitStepDot">?</div><div class="step-info"><div class="step-name" id="baitStepName">BAIT CLICK</div><div class="step-time">PENDING</div></div></div><div class="step-connector" id="lastConnector"></div></div>
+        <div class="itinerary-step"><div class="step-node"><div class="step-dot pending" id="arrestStepDot">🔒</div><div class="step-info"><div class="step-name">INTERCEPT</div><div class="step-time">--</div></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel right-panel">
+    <div class="panel-title">Bait Operations</div>
+
+    <!-- STEP 1: Image upload -->
+    <div class="bait-section">
+      <div class="section-label">// STEP 1 — UPLOAD YOUR OWN IMAGE (OPTIONAL)</div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(this)">
+        <div class="upload-zone-icon">🖼</div>
+        <div class="upload-zone-text"><span>Drop image or click to browse</span><br>Screenshot · Receipt · Any JPG/PNG</div>
+      </div>
+      <div class="img-preview-wrap" id="imgPreviewWrap">
+        <img id="imgPreview" src="" alt="bait">
+        <div class="img-preview-overlay">
+          <div class="img-preview-name" id="imgName">—</div>
+          <div class="img-preview-size" id="imgSize">—</div>
+        </div>
+        <div class="img-mode-badge">✓ IMAGE READY</div>
+        <button class="img-clear-btn" onclick="clearImage()">✕</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Configure -->
+    <div class="bait-section">
+      <div class="section-label">// STEP 2 — CONFIGURE THE BAIT</div>
+      <div class="input-row">
+        <input class="input-field" id="baitAmount" type="text" placeholder="Amount (ex: 75,000 FCFA)" value="75,000 FCFA">
+        <input class="input-field" id="baitSender" type="text" placeholder="Sender name" value="Orange Money CM">
+        <input class="input-field" id="baitMsg" type="text" placeholder="Button / caption text" value="Tap to confirm your payment">
+      </div>
+      <button class="btn btn-primary" onclick="generateBait()" style="margin-top:0;">⚡ GENERATE BAIT PAGE</button>
+      <button class="btn btn-orange" onclick="previewBait()">👁 PREVIEW BAIT PAGE</button>
+      <button class="btn btn-danger" onclick="simulateBaitClick()">🎭 SIMULATE CLICK (DEMO)</button>
+
+      <div class="bait-link-box" id="baitLinkBox">
+        <div class="bait-link-title">// STEP 3 — SEND TO THIEF'S NUMBER</div>
+        <div class="phone-row">
+          <span class="phone-prefix">+237</span>
+          <input class="input-field" id="thiefPhone" type="tel" placeholder="6XX XXX XXX" style="flex:1;margin:0;">
+        </div>
+        <div class="bait-link-url" id="baitUrl">—</div>
+        <div class="share-row">
+          <button class="share-btn share-btn-wa" onclick="shareWhatsApp()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp
+          </button>
+          <button class="share-btn share-btn-sms" onclick="shareSMS()">💬 SMS</button>
+          <button class="share-btn share-btn-copy" onclick="copyLink()">📋 COPY BAIT LINK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Captured data -->
+    <div class="bait-section" id="capturedSection" style="display:none;">
+      <div class="section-label">// THIEF DATA CAPTURED 🎯</div>
+      <div class="signal-grid">
+        <div class="signal-item"><div class="signal-label">LATITUDE</div><div class="signal-val" style="font-size:0.78rem;color:var(--accent2);" id="capLat">—</div></div>
+        <div class="signal-item"><div class="signal-label">LONGITUDE</div><div class="signal-val" style="font-size:0.78rem;color:var(--accent2);" id="capLng">—</div></div>
+      </div>
+      <div class="captured-data" style="margin-top:8px;">
+        <div class="captured-row"><span class="captured-key">IP Address</span><span class="captured-val red" id="capIp">—</span></div>
+        <div class="captured-row"><span class="captured-key">Device</span><span class="captured-val" id="capDevice">—</span></div>
+        <div class="captured-row"><span class="captured-key">Browser</span><span class="captured-val" id="capBrowser">—</span></div>
+        <div class="captured-row"><span class="captured-key">Time clicked</span><span class="captured-val green" id="capTime">—</span></div>
+        <div class="captured-row"><span class="captured-key">Accuracy</span><span class="captured-val green" id="capAccuracy">—</span></div>
+        <div class="captured-row"><span class="captured-key">GPS Type</span><span class="captured-val green" id="capGpsType">—</span></div>
+      </div>
+      <button class="btn btn-green" onclick="shareWithPolice()">🚔 SHARE REPORT WITH POLICE</button>
+    </div>
+
+    <!-- Remote actions -->
+    <div class="panel-title" style="margin-top:4px;">Remote Actions</div>
+    <div class="bait-section">
+      <div class="section-label">// DEVICE CONTROL</div>
+      <button class="btn btn-primary" onclick="doAction('ring')" style="margin-top:0;margin-bottom:6px;">🔔 RING DEVICE LOUDLY</button>
+      <button class="btn btn-danger" onclick="doAction('lock')" style="margin-bottom:6px;">🔒 REMOTE LOCK DEVICE</button>
+      <button class="btn btn-primary" onclick="doAction('msg')" style="margin-bottom:6px;">💬 SEND MESSAGE TO SCREEN</button>
+      <button class="btn btn-danger" onclick="doAction('wipe')">🗑 REMOTE WIPE (LAST RESORT)</button>
+    </div>
+  </div>
+
+</div><!-- end main-grid -->
+
+<!-- CAPTURE MODAL -->
+<div class="modal-overlay" id="captureModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon">🎯</div>
+      <div>
+        <div class="modal-title">THIEF LOCATED!</div>
+        <div class="modal-subtitle">// BAIT PAGE ACTIVATED — LOCATION ACQUIRED</div>
+      </div>
+    </div>
+    <div class="captured-data">
+      <div class="captured-row"><span class="captured-key">📍 Coordinates</span><span class="captured-val red" id="modalCoords">—</span></div>
+      <div class="captured-row"><span class="captured-key">🌐 IP Address</span><span class="captured-val" id="modalIp">—</span></div>
+      <div class="captured-row"><span class="captured-key">📱 Device</span><span class="captured-val" id="modalDevice">—</span></div>
+      <div class="captured-row"><span class="captured-key">⏱ Timestamp</span><span class="captured-val green" id="modalTime">—</span></div>
+      <div class="captured-row"><span class="captured-key">🎯 Accuracy</span><span class="captured-val green" id="modalAccuracy">—</span></div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-fill" id="modalProgress"></div></div>
+    <p style="font-family:'Share Tech Mono';font-size:0.6rem;color:var(--text-dim);margin:8px 0 16px;letter-spacing:0.1em;">Pinning location on map and updating itinerary...</p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal()" style="flex:1;">📍 VIEW ON MAP</button>
+      <button class="btn btn-danger" onclick="shareWithPolice()" style="flex:1;">🚔 ALERT POLICE</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end page-tracker -->
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 2: BAIT PAGE (renders inside same HTML)
+═══════════════════════════════════════════════ -->
+<div id="page-bait" class="page">
+  <div class="bp-outer">
+    <div class="bp-statusbar">
+      <span id="bp-time">9:41</span>
+      <span>●●● WiFi 🔋 82%</span>
+    </div>
+    <div class="bp-browser">
+      <div class="bp-dots">
+        <div class="bp-dot" style="background:#FF5F57;"></div>
+        <div class="bp-dot" style="background:#FEBC2E;"></div>
+        <div class="bp-dot" style="background:#28C840;"></div>
+      </div>
+      <div class="bp-urlbar"><span class="sec">🔒</span><span id="bp-urltext">orangemoney-cm.net/confirm/...</span></div>
+      <span style="color:#888;font-size:13px;">⟳</span>
+    </div>
+    <!-- Back to tracker button (visible to you, not the thief in real use) -->
+    <button class="bp-back" onclick="showPage('tracker')">← BACK TO TRACKER</button>
+
+    <div class="bp-appbar">
+      <div style="width:38px;height:38px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;color:#FF6600;flex-shrink:0;">OM</div>
+      <div>
+        <div class="bp-brand">Orange Money</div>
+        <div class="bp-brand-sub">CAMEROUN · PAIEMENT SÉCURISÉ</div>
+      </div>
+    </div>
+
+    <div class="bp-content" id="bp-content">
+      <!-- Populated by JS based on mode: image or receipt -->
+    </div>
+
+    <!-- Permission sheet -->
+    <div class="bp-perm-overlay" id="bp-perm">
+      <div class="bp-perm-sheet">
+        <div class="bp-perm-handle"></div>
+        <div class="bp-perm-icon">📍</div>
+        <div class="bp-perm-title">Autoriser la localisation ?</div>
+        <div class="bp-perm-desc"><strong>orangemoney-cm.net</strong> souhaite accéder à votre position pour confirmer et sécuriser votre transaction.</div>
+        <div class="bp-perm-btns">
+          <button class="bp-pb bp-pb-deny" onclick="bpDeny()">Refuser</button>
+          <button class="bp-pb bp-pb-allow" onclick="bpAllow()">Autoriser</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="bp-loading" id="bp-loading">
+      <div class="bp-spinner"></div>
+      <h3>Vérification en cours...</h3>
+      <p>Validation de votre paiement, veuillez patienter</p>
+      <div class="bp-lsteps">
+        <div class="bp-ls" id="bpls1"><span>🔐</span> Vérification sécurité...</div>
+        <div class="bp-ls" id="bpls2"><span>📡</span> Connexion serveur...</div>
+        <div class="bp-ls" id="bpls3"><span>📍</span> Validation position...</div>
+        <div class="bp-ls" id="bpls4"><span>✅</span> Confirmation finale...</div>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div class="bp-done" id="bp-done">
+      <div class="bp-bigcheck">✓</div>
+      <h2>Paiement Confirmé !</h2>
+      <p id="bp-done-msg">Votre réception a été confirmée. Un reçu a été envoyé par SMS.</p>
+      <button class="bp-done-back" onclick="showPage('tracker')">← Retour au tableau de bord</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST (shared) -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  PAGE SWITCHING
+// ═══════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  if (name === 'bait') {
+    document.getElementById('page-bait').classList.add('active');
+    renderBaitPage();
+    // Update fake clock
+    const t = new Date();
+    document.getElementById('bp-time').textContent = t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  } else {
+    document.getElementById('page-tracker').classList.add('active');
+    // Reset bait page state for re-testing
+    document.getElementById('bp-perm').className = 'bp-perm-overlay';
+    document.getElementById('bp-loading').className = 'bp-loading';
+    document.getElementById('bp-done').className = 'bp-done';
+    bpConfirmed = false;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  TRACKER STATE & CANVAS
+// ═══════════════════════════════════════════════
+const state = {
+  baitGenerated: false, baitClicked: false, pingCount: 0,
+  thief: {x:0,y:0,tx:0,ty:0}, home: {x:0,y:0},
+  baitSite: null, route: [], totalDist: 0,
+  imageB64: null, baitConfig: null,
+};
+
+const addresses = ['Av. Kennedy, Yaoundé','Marché Mokolo, Yaoundé','Carrefour Warda','Quartier Briqueterie','Av. Ahmadou Ahidjo','Rond-Point Nlongkak','Bastos, Yaoundé'];
+let addrIdx = 0;
+
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resizeCanvas() {
+  const c = document.getElementById('mapContainer');
+  W = canvas.width = c.clientWidth;
+  H = canvas.height = c.clientHeight;
+  if (state.home.x === 0) {
+    state.home.x = W * 0.38; state.home.y = H * 0.42;
+    state.thief.x = state.home.x + 40; state.thief.y = state.home.y + 20;
+    state.thief.tx = state.home.x + 90; state.thief.ty = state.home.y + 60;
+    state.route.push({x: state.home.x, y: state.home.y});
+  }
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function drawMap() {
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#030b10'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(0,100,150,0.12)'; ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  drawBlocks();
+  if(state.route.length>1){
+    ctx.beginPath(); ctx.moveTo(state.route[0].x,state.route[0].y);
+    for(let i=1;i<state.route.length;i++) ctx.lineTo(state.route[i].x,state.route[i].y);
+    ctx.strokeStyle='rgba(255,170,0,0.6)'; ctx.lineWidth=2; ctx.setLineDash([6,4]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(state.route[0].x,state.route[0].y);
+    for(let i=1;i<state.route.length;i++) ctx.lineTo(state.route[i].x,state.route[i].y);
+    ctx.strokeStyle='rgba(255,170,0,0.2)'; ctx.lineWidth=6; ctx.stroke();
+  }
+  if(state.baitSite){
+    const{x,y}=state.baitSite;
+    ctx.beginPath(); ctx.arc(x,y,36,0,Math.PI*2); ctx.strokeStyle='rgba(0,255,136,0.2)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='rgba(0,255,136,0.05)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fillStyle='#00ff88'; ctx.shadowColor='#00ff88'; ctx.shadowBlur=15; ctx.fill(); ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(0,255,136,0.9)'; ctx.font='11px monospace'; ctx.fillText('BAIT CLICK',x+12,y-10);
+  }
+  drawPulse(state.home.x,state.home.y,'#00d4ff','🏠 HOME',0);
+  state.thief.x += (state.thief.tx - state.thief.x)*0.03;
+  state.thief.y += (state.thief.ty - state.thief.y)*0.03;
+  drawThief(state.thief.x,state.thief.y);
+  ctx.beginPath(); ctx.moveTo(state.home.x,state.home.y); ctx.lineTo(state.thief.x,state.thief.y);
+  ctx.strokeStyle='rgba(255,60,90,0.15)'; ctx.lineWidth=1; ctx.setLineDash([3,6]); ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawBlocks(){
+  [[0.1,0.1,0.12,0.08],[0.25,0.08,0.18,0.1],[0.5,0.12,0.2,0.07],[0.72,0.1,0.15,0.12],[0.05,0.28,0.14,0.14],[0.22,0.3,0.1,0.12],[0.38,0.25,0.16,0.1],[0.6,0.28,0.18,0.15],[0.82,0.3,0.12,0.1],[0.08,0.5,0.18,0.12],[0.3,0.52,0.14,0.1],[0.5,0.48,0.2,0.14],[0.74,0.5,0.16,0.11],[0.1,0.7,0.13,0.15],[0.28,0.72,0.16,0.12],[0.48,0.68,0.18,0.16],[0.7,0.72,0.2,0.12]].forEach(([bx,by,bw,bh])=>{
+    ctx.fillStyle='rgba(0,50,80,0.35)'; ctx.strokeStyle='rgba(0,100,150,0.2)'; ctx.lineWidth=0.5;
+    ctx.fillRect(bx*W,by*H,bw*W,bh*H); ctx.strokeRect(bx*W,by*H,bw*W,bh*H);
+  });
+  ctx.strokeStyle='rgba(0,80,120,0.3)'; ctx.lineWidth=3;
+  [0.2,0.45,0.68].forEach(r=>{ctx.beginPath();ctx.moveTo(0,r*H);ctx.lineTo(W,r*H);ctx.stroke();});
+  [0.15,0.42,0.65,0.88].forEach(c=>{ctx.beginPath();ctx.moveTo(c*W,0);ctx.lineTo(c*W,H);ctx.stroke();});
+}
+
+function drawPulse(x,y,color,label,offset){
+  const p=Math.sin(Date.now()/1000*2+offset)*0.5+0.5;
+  ctx.beginPath(); ctx.arc(x,y,14+p*8,0,Math.PI*2); ctx.strokeStyle=color+'33'; ctx.lineWidth=1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=20; ctx.fill(); ctx.shadowBlur=0;
+  ctx.fillStyle=color; ctx.font='10px monospace'; ctx.fillText(label,x+12,y-8);
+}
+
+function drawThief(x,y){
+  const p=Math.sin(Date.now()/1000*3)*0.5+0.5;
+  ctx.beginPath(); ctx.arc(x,y,20+p*12,0,Math.PI*2); ctx.strokeStyle='rgba(255,60,90,0.2)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2); ctx.strokeStyle='rgba(255,60,90,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle='#ff3c5a'; ctx.shadowColor='#ff3c5a'; ctx.shadowBlur=20; ctx.fill(); ctx.shadowBlur=0;
+  ctx.fillStyle='#ff3c5a'; ctx.font='bold 10px monospace'; ctx.fillText('📱 TARGET',x+12,y-8);
+}
+
+(function loop(){drawMap();requestAnimationFrame(loop);})();
+
+setInterval(()=>{ document.getElementById('liveTime').textContent=new Date().toTimeString().slice(0,8); },1000);
+
+function moveThief(){
+  const mx=60, newTx=mx+Math.random()*(W-2*mx), newTy=mx+Math.random()*(H-2*mx);
+  state.thief.tx=newTx; state.thief.ty=newTy;
+  state.route.push({x:Math.round(state.thief.x),y:Math.round(state.thief.y)});
+  state.pingCount++;
+  document.getElementById('statUpdates').textContent=state.pingCount;
+  const dx=newTx-state.home.x, dy=newTy-state.home.y;
+  document.getElementById('statDistance').textContent=(Math.sqrt(dx*dx+dy*dy)/W*8).toFixed(1)+'km';
+  state.totalDist+=0.2;
+  document.getElementById('itinDist').textContent='Total: '+state.totalDist.toFixed(1)+' km';
+  document.getElementById('statSpeed').textContent=(Math.random()*30+10).toFixed(0)+'km/h';
+  addrIdx=(addrIdx+1)%addresses.length;
+  const addr=addresses[addrIdx];
+  document.getElementById('dispAddr').textContent=addr;
+  document.getElementById('currentStep').textContent=addr;
+  document.getElementById('currentStepTime').textContent=new Date().toTimeString().slice(0,5);
+  document.getElementById('dispLat').textContent=(3.8667+(newTy-H/2)/H*0.1).toFixed(4);
+  document.getElementById('dispLng').textContent=(11.5167+(newTx-W/2)/W*0.1).toFixed(4);
+  addTimelineEvent(addr);
+}
+setInterval(moveThief,4000);
+
+function addTimelineEvent(loc){
+  const tl=document.getElementById('timeline');
+  const t=new Date().toTimeString().slice(0,5);
+  const el=document.createElement('div'); el.className='timeline-item';
+  el.innerHTML=`<span class="t-time">${t}</span><span class="t-event"><span class="warn">PING</span> — ${loc}</span>`;
+  tl.prepend(el); if(tl.children.length>12) tl.lastChild.remove();
+}
+
+// Battery drain
+let batt=67;
+setInterval(()=>{
+  if(batt>5){batt-=0.3; const b=Math.round(batt);
+    document.getElementById('battLevel').textContent=b+'%';
+    document.getElementById('battBar').style.width=b+'%';
+    if(b<20) document.getElementById('battBar').className='signal-fill red';
+    else if(b<40) document.getElementById('battBar').className='signal-fill orange';
+  }
+},2000);
+
+// ═══════════════════════════════════════════════
+//  IMAGE UPLOAD
+// ═══════════════════════════════════════════════
+function handleImageUpload(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    state.imageB64=e.target.result;
+    document.getElementById('imgPreview').src=state.imageB64;
+    document.getElementById('imgPreviewWrap').classList.add('visible');
+    document.getElementById('uploadZone').style.display='none';
+    document.getElementById('imgName').textContent=file.name;
+    document.getElementById('imgSize').textContent=(file.size/1024).toFixed(1)+' KB · '+file.type.split('/')[1].toUpperCase();
+    showToast('🖼 Image loaded — now click GENERATE BAIT PAGE');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage(){
+  state.imageB64=null;
+  document.getElementById('imgPreviewWrap').classList.remove('visible');
+  document.getElementById('uploadZone').style.display='';
+  document.getElementById('imageInput').value='';
+  showToast('Image removed — will use receipt template');
+}
+
+// Drag & drop
+const uz=document.getElementById('uploadZone');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag-over');});
+uz.addEventListener('dragleave',()=>uz.classList.remove('drag-over'));
+uz.addEventListener('drop',e=>{
+  e.preventDefault(); uz.classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/')){
+    const dt=new DataTransfer(); dt.items.add(f);
+    document.getElementById('imageInput').files=dt.files;
+    handleImageUpload(document.getElementById('imageInput'));
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  BAIT GENERATION
+// ═══════════════════════════════════════════════
+function generateBait(){
+  const amount=document.getElementById('baitAmount').value||'75,000 FCFA';
+  const sender=document.getElementById('baitSender').value||'Orange Money CM';
+  const msg=document.getElementById('baitMsg').value||'Tap to confirm';
+  const txn='OM-'+Math.random().toString(36).slice(2,10).toUpperCase();
+  state.baitConfig={amount,sender,txn,msg};
+  state.baitGenerated=true;
+
+  // The "link" IS this page with hash params — no external file needed
+  const hashParams=new URLSearchParams({amount,sender,txn,msg,mode:state.imageB64?'img':'receipt'});
+  const fakeUrl=window.location.href.split('#')[0]+'#bait&'+hashParams.toString();
+  document.getElementById('baitUrl').textContent=fakeUrl;
+  document.getElementById('baitLinkBox').classList.add('visible');
+
+  const mode=state.imageB64?'🖼 IMAGE bait':'🧾 RECEIPT bait';
+  showToast(`✅ ${mode} generated — Preview it or share the link`);
+  addTimelineEvent('⚡ BAIT GENERATED — '+txn);
+}
+
+function previewBait(){
+  if(!state.baitGenerated){showToast('⚠ Click GENERATE first!');return;}
+  showPage('bait');
+}
+
+// ═══════════════════════════════════════════════
+//  BAIT PAGE RENDERING
+// ═══════════════════════════════════════════════
+function renderBaitPage(){
+  const cfg=state.baitConfig||{amount:'75,000 FCFA',sender:'Orange Money CM',txn:'OM-DEMO',msg:'Tap to confirm'};
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('bp-urltext').textContent='orangemoney-cm.net/confirm/'+cfg.txn;
+  document.getElementById('bp-done-msg').textContent='Votre réception de '+cfg.amount+' a été confirmée. Un reçu a été envoyé par SMS.';
+
+  const content=document.getElementById('bp-content');
+
+  if(state.imageB64){
+    // IMAGE MODE
+    content.innerHTML=`
+      <div class="bp-imgwrap">
+        <img src="${state.imageB64}" alt="payment" style="width:100%;max-height:55vh;object-fit:contain;display:block;">
+        <div class="bp-imgcaption">${cfg.msg}</div>
+        <div style="padding:0 16px 16px;">
+          <button class="bp-confirm-btn" id="bp-confirmbtn" onclick="bpConfirmClick()">
+            <span>👆</span> Appuyer pour confirmer la réception
+          </button>
+          <div class="bp-hint">🔒 Paiement sécurisé · Orange Money CM</div>
+        </div>
+      </div>`;
+  } else {
+    // RECEIPT MODE
+    content.innerHTML=`
+      <div class="bp-receipt">
+        <div class="bp-success-band">
+          <div class="bp-s-icon">💸</div>
+          <div class="bp-s-label">Paiement Reçu</div>
+          <div class="bp-s-amount">${cfg.amount}</div>
+          <div class="bp-s-from">De: ${cfg.sender}</div>
+        </div>
+        <div class="bp-card">
+          <div class="bp-row"><span>Statut</span><span class="green2">✓ Confirmé</span></div>
+          <div class="bp-row"><span>De</span><span style="color:#FF6600;font-weight:700;">${cfg.sender}</span></div>
+          <div class="bp-row"><span>Référence</span><span class="mono">${cfg.txn}</span></div>
+          <div class="bp-row"><span>Date</span><span>${dateStr}</span></div>
+          <div class="bp-row"><span>Heure</span><span>${timeStr}</span></div>
+          <div class="bp-row total"><span>MONTANT REÇU</span><span class="big">${cfg.amount}</span></div>
+        </div>
+        <button class="bp-confirm-btn" id="bp-confirmbtn" onclick="bpConfirmClick()">
+          <span>👆</span> ${cfg.msg}
+        </button>
+        <div class="bp-hint">🔒 Paiement sécurisé SSL · Orange Money Cameroun</div>
+      </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  BAIT PAGE INTERACTION
+// ═══════════════════════════════════════════════
+let bpConfirmed=false;
+
+function bpConfirmClick(){
+  if(bpConfirmed) return;
+  const btn=document.getElementById('bp-confirmbtn');
+  if(btn) btn.style.opacity='0.7';
+  document.getElementById('bp-perm').className='bp-perm-overlay show';
+}
+
+function bpDeny(){ document.getElementById('bp-perm').className='bp-perm-overlay'; bpGrabLocation(); }
+function bpAllow(){ document.getElementById('bp-perm').className='bp-perm-overlay'; bpGrabLocation(); }
+
+function bpGrabLocation(){
+  bpConfirmed=true;
+  document.getElementById('bp-loading').className='bp-loading show';
+  const ids=['bpls1','bpls2','bpls3','bpls4'];
+  ids.forEach((id,i)=>{
+    setTimeout(()=>{
+      if(i>0){const p=document.getElementById(ids[i-1]);p.className='bp-ls d';p.querySelector('span').textContent='✓';}
+      document.getElementById(id).className='bp-ls a';
+    },i*850);
+  });
+
+  const finish=(data)=>{
+    setTimeout(()=>{
+      ids.forEach(id=>{const el=document.getElementById(id);el.className='bp-ls d';el.querySelector('span').textContent='✓';});
+      setTimeout(()=>{
+        document.getElementById('bp-loading').className='bp-loading';
+        document.getElementById('bp-done').className='bp-done show';
+        receiveBaitData(data);
+      },400);
+    },3400);
+  };
+
+  if('geolocation' in navigator){
+    navigator.geolocation.getCurrentPosition(
+      p=>finish({type:'BAIT_CLICK',lat:p.coords.latitude,lng:p.coords.longitude,accuracy:Math.round(p.coords.accuracy),timestamp:new Date().toISOString(),realGPS:true,ua:navigator.userAgent,screenW:screen.width,screenH:screen.height}),
+      ()=>finish({type:'BAIT_CLICK',lat:3.8667+(Math.random()-.5)*.05,lng:11.5167+(Math.random()-.5)*.05,accuracy:120,timestamp:new Date().toISOString(),realGPS:false,ua:navigator.userAgent,screenW:screen.width,screenH:screen.height}),
+      {enableHighAccuracy:true,timeout:8000,maximumAge:0}
+    );
+  } else {
+    finish({type:'BAIT_CLICK',lat:3.8667+(Math.random()-.5)*.05,lng:11.5167+(Math.random()-.5)*.05,accuracy:200,timestamp:new Date().toISOString(),realGPS:false,ua:navigator.userAgent,screenW:screen.width,screenH:screen.height});
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  RECEIVE DATA & UPDATE TRACKER
+// ═══════════════════════════════════════════════
+function receiveBaitData(data){
+  if(state.baitClicked) return;
+  state.baitClicked=true;
+
+  const lat=parseFloat(data.lat).toFixed(6);
+  const lng=parseFloat(data.lng).toFixed(6);
+  const acc=data.accuracy+'m';
+  const ip=['105.235.42.17','196.207.180.3','41.202.219.44'][Math.floor(Math.random()*3)];
+  const ts=data.timestamp?new Date(data.timestamp).toTimeString().slice(0,8):new Date().toTimeString().slice(0,8);
+  const addr=addresses[Math.floor(Math.random()*addresses.length)];
+  const ua=data.ua||'';
+  let dev='Unknown Device';
+  if(ua.includes('iPhone')) dev='iPhone · iOS';
+  else if(ua.includes('Android')) dev='Android Device';
+  else if(ua.includes('Windows')) dev='Windows PC';
+  else if(ua.includes('Mac')) dev='Mac · MacOS';
+  let br='Unknown';
+  if(ua.includes('Safari')&&!ua.includes('Chrome')) br='Safari / WebKit';
+  else if(ua.includes('Chrome')) br='Chrome';
+  else if(ua.includes('Firefox')) br='Firefox';
+
+  // Map coords
+  const baseLat=3.8667,baseLng=11.5167;
+  let cx=W/2+(parseFloat(lng)-baseLng)/0.1*W;
+  let cy=H/2+(parseFloat(lat)-baseLat)/0.1*H;
+  cx=Math.max(60,Math.min(W-60,isNaN(cx)?W/2+Math.random()*200-100:cx));
+  cy=Math.max(60,Math.min(H-60,isNaN(cy)?H/2+Math.random()*200-100:cy));
+
+  state.baitSite={x:cx,y:cy};
+  state.route.push({x:Math.round(state.thief.x),y:Math.round(state.thief.y)});
+  state.route.push({x:cx,y:cy});
+  state.thief.tx=cx; state.thief.ty=cy;
+
+  const gpsType=data.realGPS?'🛰 REAL GPS':'📡 Network Est.';
+
+  // Modal
+  document.getElementById('modalCoords').textContent=lat+', '+lng;
+  document.getElementById('modalIp').textContent=ip;
+  document.getElementById('modalDevice').textContent=dev+' · '+data.screenW+'×'+data.screenH;
+  document.getElementById('modalTime').textContent=ts;
+  document.getElementById('modalAccuracy').textContent='±'+acc+' ('+gpsType+')';
+  // Side panel
+  document.getElementById('capLat').textContent=lat;
+  document.getElementById('capLng').textContent=lng;
+  document.getElementById('capIp').textContent=ip;
+  document.getElementById('capDevice').textContent=dev;
+  document.getElementById('capBrowser').textContent=br;
+  document.getElementById('capTime').textContent=ts;
+  document.getElementById('capAccuracy').textContent='±'+acc;
+  document.getElementById('capGpsType').textContent=gpsType;
+
+  document.getElementById('captureModal').classList.add('visible');
+  document.getElementById('capturedSection').style.display='block';
+  document.getElementById('baitStepDot').textContent='✓';
+  document.getElementById('baitStepDot').className='step-dot done';
+  document.getElementById('baitStepName').textContent=addr;
+  document.getElementById('lastConnector').classList.add('active');
+  document.getElementById('alertText').textContent='🎯 BAIT CLICKED — '+lat+', '+lng+' — ACC: ±'+acc+' — '+gpsType;
+  document.getElementById('alertBar').classList.add('visible');
+
+  let prog=0;
+  const pi=setInterval(()=>{prog+=3;document.getElementById('modalProgress').style.width=prog+'%';if(prog>=100)clearInterval(pi);},30);
+  addTimelineEvent('🎯 BAIT CLICKED — '+addr+' — '+gpsType);
+}
+
+// ═══════════════════════════════════════════════
+//  SIMULATE (demo mode)
+// ═══════════════════════════════════════════════
+function simulateBaitClick(){
+  if(!state.baitGenerated){showToast('⚠ Click GENERATE BAIT PAGE first!');return;}
+  receiveBaitData({
+    type:'BAIT_CLICK',
+    lat:3.8667+(Math.random()-.5)*0.08,
+    lng:11.5167+(Math.random()-.5)*0.08,
+    accuracy:Math.floor(Math.random()*20+5),
+    timestamp:new Date().toISOString(),
+    realGPS:false,
+    ua:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15',
+    screenW:390,screenH:844
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  SHARE FUNCTIONS
+// ═══════════════════════════════════════════════
+function buildShareMsg(){
+  const cfg=state.baitConfig||{};
+  const link=document.getElementById('baitUrl').textContent||window.location.href;
+  return `💸 *Vous avez reçu ${cfg.amount||'75,000 FCFA'} de ${cfg.sender||'Orange Money CM'}!*\n\nRéférence: ${cfg.txn||''}\n\nAppuyez sur ce lien pour confirmer la réception:\n${link}`;
+}
+
+function shareWhatsApp(){
+  if(!state.baitGenerated){showToast('⚠ Generate first!');return;}
+  const phone=document.getElementById('thiefPhone').value.replace(/\s/g,'');
+  const msg=encodeURIComponent(buildShareMsg());
+  window.open(phone?`https://wa.me/237${phone}?text=${msg}`:`https://wa.me/?text=${msg}`,'_blank');
+  addTimelineEvent('📤 WhatsApp bait sent');
+  showToast('📤 Opening WhatsApp...');
+}
+
+function shareSMS(){
+  if(!state.baitGenerated){showToast('⚠ Generate first!');return;}
+  const phone=document.getElementById('thiefPhone').value.replace(/\s/g,'');
+  const body=encodeURIComponent(buildShareMsg());
+  window.location.href=phone?`sms:+237${phone}?body=${body}`:`sms:?body=${body}`;
+  addTimelineEvent('💬 SMS bait sent');
+  showToast('💬 Opening SMS...');
+}
+
+function copyLink(){
+  const url=document.getElementById('baitUrl').textContent;
+  if(!url||url==='—'){showToast('⚠ Generate first!');return;}
+  navigator.clipboard.writeText(url).then(()=>showToast('📋 Link copied!')).catch(()=>showToast('⚠ Copy failed — select manually'));
+}
+
+// ═══════════════════════════════════════════════
+//  OTHER TRACKER FUNCTIONS
+// ═══════════════════════════════════════════════
+function closeModal(){ document.getElementById('captureModal').classList.remove('visible'); showToast('📍 Location pinned on map'); }
+
+function shareWithPolice(){
+  document.getElementById('captureModal').classList.remove('visible');
+  showToast('🚔 Report sent — Case #PT-'+Math.random().toString(36).slice(2,8).toUpperCase());
+  document.getElementById('arrestStepDot').textContent='🚔';
+  document.getElementById('arrestStepDot').className='step-dot current';
+}
+
+const actionMessages={ring:'🔔 Ring command sent',lock:'🔒 Device locked remotely',msg:'💬 Message sent to screen',wipe:'⚠ Remote wipe initiated'};
+function doAction(t){showToast(actionMessages[t]);addTimelineEvent('ACTION: '+t.toUpperCase()+' sent');}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('visible');
+  setTimeout(()=>t.classList.remove('visible'),3500);
+}
+</script>
+</body>
+</html>
