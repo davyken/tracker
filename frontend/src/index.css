@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #030508;
+    color: #c8dde8;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: #080d14; }
+  ::-webkit-scrollbar-thumb { background: #0f3a5a; border-radius: 2px; }
+}
+
+@layer components {
+  /* Leaflet map dark override */
+  .leaflet-container {
+    background: #030b10 !important;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .leaflet-tile-pane { filter: brightness(0.85) saturate(0.7) hue-rotate(180deg); }
+  .leaflet-control-attribution { background: rgba(8,13,20,0.8) !important; color: #4a6a7a !important; }
+  .leaflet-control-zoom a { background: #080d14 !important; color: #00d4ff !important; border-color: #0f3a5a !important; }
+
+  /* Pulse dot animations */
+  .pulse-green { animation: pulse-green 1.5s ease-in-out infinite; }
+  .pulse-red   { animation: pulse-red   1.5s ease-in-out infinite; }
+  .pulse-yellow{ animation: pulse-yellow 1.5s ease-in-out infinite; }
+
+  @keyframes pulse-green  { 0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,0.4);}  50%{box-shadow:0 0 0 8px rgba(0,255,136,0);} }
+  @keyframes pulse-red    { 0%,100%{box-shadow:0 0 0 0 rgba(255,60,90,0.4);}   50%{box-shadow:0 0 0 8px rgba(255,60,90,0);} }
+  @keyframes pulse-yellow { 0%,100%{box-shadow:0 0 0 0 rgba(255,170,0,0.4);}   50%{box-shadow:0 0 0 8px rgba(255,170,0,0);} }
+
+  /* Scan line animation */
+  .scan-line::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: scan 1.5s linear infinite;
+  }
+  @keyframes scan { to { left: 200%; } }
+
+  /* Bait confirm button shimmer */
+  .btn-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    animation: shine 2.2s ease-in-out infinite;
+  }
+  @keyframes shine { to { left: 200%; } }
+
+  /* Modal pop-in */
+  .modal-pop { animation: modal-in 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes modal-in { from { transform: scale(0.7) translateY(40px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+  /* Toast slide-up */
+  .toast-up { animation: toast-in 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes toast-in { from { transform: translateX(-50%) translateY(100px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }
+
+  /* Bottom sheet slide */
+  .sheet-up { animation: sheet-in 0.3s ease; }
+  @keyframes sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  /* Big check pop */
+  .check-pop { animation: check-in 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes check-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+}
