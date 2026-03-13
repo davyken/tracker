@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: phantom-track-backend
+    repo: https://github.com/davyken/phantom-tracker
+    region: oregon
+    rootDirectory: backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RENDER
+        value: true
+      - key: PORT
+        value: 4000

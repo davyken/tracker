@@ -11,7 +11,7 @@ const server = http.createServer(app);
 // ── Socket.io ─────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'https://localhost:5173',
     methods: ['GET', 'POST'],
   },
 });
@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
 });
 
 // ── Middleware ────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
+app.use(cors({ origin: process.env.FRONTEND_URL || 'https://localhost:5173' }));
 app.use(express.json({ limit: '20mb' })); // large enough for base64 images
 app.use(express.urlencoded({ extended: true }));
 
