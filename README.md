@@ -80,6 +80,7 @@ npm run install:all  # installs backend + frontend dependencies
 ```bash
 cp backend/.env.example backend/.env
 ```
+Then edit `backend/.env`:
 ```env
 MONGODB_URI=mongodb+srv://youruser:yourpass@cluster0.xxxxx.mongodb.net/phantom-track
 PORT=4000

@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: phantom-track-backend
+    env: node
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: MONGODB_URI
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: IPINFO_TOKEN
+        sync: false
